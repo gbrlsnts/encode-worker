@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { DownloadModule } from './download/download.module';
 import { EncodeModule } from './encode/encode.module';
 import { StorageModule } from './storage/storage.module';
+import { FilesystemModule } from './filesystem/filesystem.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { StorageModule } from './storage/storage.module';
     DownloadModule,
     EncodeModule,
     StorageModule,
+    FilesystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],
