@@ -5,7 +5,7 @@ import {
   Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { JobState } from './manager.types';
+import { JobState } from '../common/';
 
 @Entity()
 export class Job {
