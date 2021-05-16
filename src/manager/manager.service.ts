@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JobRepository } from './job.repository';
-import { JobState } from './manager.types';
+import { JobState } from '../common/types/job.type';
 
 @Injectable()
 export class ManagerService {

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Job } from 'bull';
+import { EventEmitter2 } from 'eventemitter2';
 import {
   OnQueueActive,
   OnQueueCompleted,
@@ -9,10 +10,14 @@ import {
   Processor,
 } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
+import {
+  JobCompletedEvent,
+  jobCompletedTopic,
+  JobQueueItem,
+  JobState,
+} from '../common';
 import { downloadQueue } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
-import { EventEmitter2 } from 'eventemitter2';
-import { JobCompletedEvent } from '../common/events/job-completed.event';
 
 @Processor(downloadQueue)
 export class DownloadConsumer {
@@ -24,13 +29,13 @@ export class DownloadConsumer {
   ) {}
 
   @Process()
-  async download(job: Job<any>) {
+  async download(job: Job<JobQueueItem>) {
     const uuid = uuidv4();
     const fileName = `${uuid}.job`;
 
     await this.filesystem.download(job.data.query.source, fileName);
 
-    job.data.localId = uuid;
+    job.data.metadata.localId = uuid;
   }
 
   @OnQueueActive()
@@ -39,11 +44,13 @@ export class DownloadConsumer {
   }
 
   @OnQueueCompleted()
-  onComplete(job: Job) {
+  onComplete(job: Job<JobQueueItem>) {
     const payload = new JobCompletedEvent();
+
+    payload.state = JobState.Download;
     payload.data = job.data;
 
-    this.eventEmitter.emit('job.completed', payload);
+    this.eventEmitter.emit(jobCompletedTopic, payload);
 
     this.logger.log(`Completed job ${job.data.jobId}`);
   }
@@ -54,7 +61,7 @@ export class DownloadConsumer {
   }
 
   @OnQueueFailed()
-  onFailed(job: Job, error: Error) {
+  onFailed(job: Job<JobQueueItem>, error: Error) {
     this.logger.error(`Error on job ${job.data.jobId}`, error.stack);
   }
 }
