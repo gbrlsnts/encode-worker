@@ -11,18 +11,26 @@ import {
 import { Logger } from '@nestjs/common';
 import { downloadQueue } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
+import { EventEmitter2 } from 'eventemitter2';
+import { JobCompletedEvent } from '../common/events/job-completed.event';
 
 @Processor(downloadQueue)
 export class DownloadConsumer {
   private logger: Logger = new Logger(DownloadConsumer.name);
 
-  constructor(private filesystem: FileSystem) {}
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private filesystem: FileSystem,
+  ) {}
 
   @Process()
   async download(job: Job<any>) {
-    const fileName = `${uuidv4()}.job`;
+    const uuid = uuidv4();
+    const fileName = `${uuid}.job`;
 
     await this.filesystem.download(job.data.query.source, fileName);
+
+    job.data.localId = uuid;
   }
 
   @OnQueueActive()
@@ -32,6 +40,11 @@ export class DownloadConsumer {
 
   @OnQueueCompleted()
   onComplete(job: Job) {
+    const payload = new JobCompletedEvent();
+    payload.data = job.data;
+
+    this.eventEmitter.emit('job.completed', payload);
+
     this.logger.log(`Completed job ${job.data.jobId}`);
   }
 
