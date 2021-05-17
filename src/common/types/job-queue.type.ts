@@ -35,5 +35,7 @@ export interface JobDestinationDto {
 }
 
 export interface WorkerMetadata {
-  localId: string;
+  localFilesId: string;
+  sourcePath: string;
+  priority: number;
 }

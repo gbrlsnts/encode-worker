@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { DownloadService } from './download.service';
 import { DownloadConsumer } from './download.consumer';
@@ -12,6 +13,15 @@ import { FilesystemModule } from '../filesystem/filesystem.module';
     }),
     FilesystemModule,
   ],
-  providers: [DownloadConsumer, DownloadService],
+  providers: [
+    {
+      provide: 'SOURCE_PREFIX',
+      useFactory: (configService: ConfigService) =>
+        configService.get('DOWNLOADED_FOLDER'),
+      inject: [ConfigService],
+    },
+    DownloadConsumer,
+    DownloadService,
+  ],
 })
 export class DownloadModule {}

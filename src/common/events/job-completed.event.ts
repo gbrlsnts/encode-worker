@@ -1,14 +1,3 @@
-import { JobQueueItem } from '../types';
-import { JobState } from '../types/job.type';
+import { JobEvent } from './job-common.event';
 
-export class JobCompletedEvent {
-  /**
-   * state where the job was completed
-   */
-  state: JobState;
-
-  /**
-   * job queue data
-   */
-  data: JobQueueItem;
-}
+export class JobCompletedEvent extends JobEvent {}
