@@ -13,7 +13,7 @@ export interface JobQueueItem {
 export interface JobQuery {
   source: string;
   destination: JobDestinationDto;
-  output: JobOutput[];
+  output: JobOutput;
 }
 
 export interface JobOutput {

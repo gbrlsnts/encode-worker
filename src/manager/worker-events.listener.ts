@@ -16,7 +16,9 @@ export class WorkerEventsListener {
 
   @OnEvent(jobStartedTopic)
   async handleJobStarted(event: JobStartedEvent): Promise<void> {
-    this.logger.log(`Job ${event.data.jobId} in state ${event.state} started`);
+    this.logger.log(
+      `Job started: ${event.data.jobId}/${event.data.query.output.format} | ${event.state}`,
+    );
 
     await this.managerService.saveJob({
       externalId: event.data.jobId.toString(10),
@@ -30,7 +32,7 @@ export class WorkerEventsListener {
   @OnEvent(jobCompletedTopic)
   async handleJobCompleted(event: JobCompletedEvent): Promise<void> {
     this.logger.log(
-      `Job ${event.data.jobId} in state ${event.state} completed`,
+      `Job completed ${event.data.jobId}/${event.data.query.output.format} | ${event.state}`,
     );
 
     const nextState = this.managerService.getNextState(event.state);
