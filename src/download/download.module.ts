@@ -10,6 +10,7 @@ import { FilesystemModule } from '../filesystem/filesystem.module';
   imports: [
     BullModule.registerQueue({
       name: downloadQueue,
+      configKey: 'remote',
     }),
     FilesystemModule,
   ],

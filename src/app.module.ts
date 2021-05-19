@@ -29,13 +29,28 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       }),
       inject: [ConfigService],
     }),
-    BullModule.forRootAsync({
+    BullModule.forRootAsync('remote', {
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         prefix: configService.get<string>('QUEUE_PREFIX'),
         redis: {
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
+          db: configService.get<number>('REDIS_DB'),
+          enableReadyCheck: true,
+          autoResendUnfulfilledCommands: false,
+          reconnectOnError: () => true,
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.get<string>('LOCAL_REDIS_HOST'),
+          port: configService.get<number>('LOCAL_REDIS_PORT'),
+          db: configService.get<number>('LOCAL_REDIS_DB'),
           enableReadyCheck: true,
           autoResendUnfulfilledCommands: false,
           reconnectOnError: () => true,
