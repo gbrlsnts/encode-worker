@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configSchema } from './config';
 import { AppController } from './app.controller';
@@ -18,16 +17,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: configSchema,
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'better-sqlite3',
-        database: __dirname + '/../data/worker.sqlite',
-        entities: [__dirname + '/**/*.entity.{js,ts}'],
-        synchronize: configService.get<string>('NODE_ENV') === 'development',
-      }),
-      inject: [ConfigService],
     }),
     BullModule.forRootAsync('remote', {
       imports: [ConfigModule],

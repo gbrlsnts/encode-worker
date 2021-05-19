@@ -1,36 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { JobState } from '../common';
-import { JobRepository } from './job.repository';
-import { Job } from './job.entity';
-import { SaveJobDto } from './dto/save-job.dto';
+import { JobState, JobQueueItem } from '../common';
 
 @Injectable()
 export class ManagerService {
-  constructor(
-    @InjectRepository(JobRepository)
-    private jobRepository: JobRepository,
-  ) {}
+  async pushJobState(currentState: JobState, job: JobQueueItem): Promise<void> {
+    const state = this.getNextState(currentState);
 
-  async saveJob(job: SaveJobDto): Promise<Job> {
-    let dbJob = await this.jobRepository.findOne({
-      externalId: job.externalId,
-    });
-
-    if (!dbJob) dbJob = this.jobRepository.create(job);
-    else Object.assign(dbJob, job);
-
-    return this.jobRepository.save(dbJob);
-  }
-
-  async pushJobState(id: string): Promise<void> {
-    const job = await this.jobRepository.findOneOrFail(id);
-    const state = this.getNextState(job.queue);
-
-    if (state) job.queue = state;
-    if (this.isLastState) job.completeAt = new Date();
-
-    await this.jobRepository.save(job);
+    // push to queue if not last
   }
 
   getNextState(state: JobState | string): JobState | undefined {

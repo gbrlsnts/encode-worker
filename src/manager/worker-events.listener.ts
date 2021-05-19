@@ -19,14 +19,6 @@ export class WorkerEventsListener {
     this.logger.log(
       `Job started: ${event.data.jobId}/${event.data.query.output.format} | ${event.state}`,
     );
-
-    await this.managerService.saveJob({
-      externalId: event.data.jobId.toString(10),
-      queue: event.state,
-      priority: event.data.metadata?.priority,
-      reservedAt: new Date(),
-      data: JSON.stringify(event.data),
-    });
   }
 
   @OnEvent(jobCompletedTopic)
@@ -35,15 +27,6 @@ export class WorkerEventsListener {
       `Job completed ${event.data.jobId}/${event.data.query.output.format} | ${event.state}`,
     );
 
-    const nextState = this.managerService.getNextState(event.state);
-    const isLastState = this.managerService.isLastState(event.state);
-
-    await this.managerService.saveJob({
-      externalId: event.data.jobId.toString(10),
-      queue: nextState ?? event.state,
-      reservedAt: null,
-      completedAt: isLastState ? new Date() : null,
-      data: JSON.stringify(event.data),
-    });
+    await this.managerService.pushJobState(event.state, event.data);
   }
 }
