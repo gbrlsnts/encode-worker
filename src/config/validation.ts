@@ -8,4 +8,9 @@ export const configSchema = Joi.object({
   REDIS_HOST: requiredString,
   REDIS_PORT: Joi.number().default(6379),
   QUEUE_PREFIX: Joi.string().min(1).default('bull'),
+  STORAGE_ENDPOINT: Joi.string().min(1),
+  STORAGE_BUCKET: Joi.string().min(1),
+  STORAGE_KEY: Joi.string().min(1),
+  STORAGE_SECRET: Joi.string().min(1),
+  DOWNLOADED_FOLDER: Joi.string().min(1),
 });
