@@ -3,13 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { DownloadService } from './download.service';
 import { DownloadConsumer } from './download.consumer';
-import { downloadQueue } from '../config/';
+import { downloadQueueName } from '../config/';
 import { FilesystemModule } from '../filesystem/filesystem.module';
 
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: downloadQueue,
+      name: downloadQueueName,
       configKey: 'remote',
     }),
     FilesystemModule,

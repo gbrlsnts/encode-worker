@@ -1,6 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Job } from 'bull';
-import { EventEmitter2 } from 'eventemitter2';
 import {
   OnQueueActive,
   OnQueueCompleted,
@@ -10,20 +8,21 @@ import {
   Processor,
 } from '@nestjs/bull';
 import { Inject, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { encodeQueueName } from '../config/';
+import { FileSystem } from '../filesystem/filesystem.service';
 import {
   JobCompletedEvent,
   jobCompletedTopic,
   JobQueueItem,
+  JobStartedEvent,
+  jobStartedTopic,
   JobState,
-} from '../common';
-import { downloadQueueName } from '../config';
-import { FileSystem } from '../filesystem/filesystem.service';
-import { JobStartedEvent } from '../common/events/job-started.event';
-import { jobStartedTopic } from '../common/events/event-topics';
+} from 'src/common';
 
-@Processor(downloadQueueName)
-export class DownloadConsumer {
-  private logger: Logger = new Logger(DownloadConsumer.name);
+@Processor(encodeQueueName)
+export class EncodeConsumer {
+  private logger: Logger = new Logger(EncodeConsumer.name);
   private sourcePathPrefix: string;
 
   constructor(
@@ -44,23 +43,14 @@ export class DownloadConsumer {
 
   @Process()
   async download(job: Job<JobQueueItem>) {
-    const uuid = uuidv4();
-    const localPath = `${this.sourcePathPrefix}/${uuid}.job`;
-
-    await this.filesystem.download(job.data.query.source, localPath);
-
-    job.data.metadata = {
-      localFilesId: uuid,
-      sourcePath: localPath,
-      priority: job.opts.priority,
-    };
+    return;
   }
 
   @OnQueueActive()
   onActive(job: Job) {
     const payload = new JobStartedEvent();
 
-    payload.state = JobState.Download;
+    payload.state = JobState.Encode;
     payload.data = job.data;
 
     this.eventEmitter.emit(jobStartedTopic, payload);
@@ -70,7 +60,7 @@ export class DownloadConsumer {
   onComplete(job: Job<JobQueueItem>) {
     const payload = new JobCompletedEvent();
 
-    payload.state = JobState.Download;
+    payload.state = JobState.Encode;
     payload.data = job.data;
 
     this.eventEmitter.emit(jobCompletedTopic, payload);
