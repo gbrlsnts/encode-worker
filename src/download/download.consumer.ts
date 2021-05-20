@@ -16,7 +16,7 @@ import {
   JobQueueItem,
   JobState,
 } from '../common';
-import { downloadQueueName } from '../config';
+import { downloadQueueName, sourcePathprefixProvider } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
 import { JobStartedEvent } from '../common/events/job-started.event';
 import { jobStartedTopic } from '../common/events/event-topics';
@@ -29,7 +29,7 @@ export class DownloadConsumer {
   constructor(
     private eventEmitter: EventEmitter2,
     private filesystem: FileSystem,
-    @Inject('SOURCE_PREFIX')
+    @Inject(sourcePathprefixProvider)
     sourcePathPrefix = 'source',
   ) {
     if (sourcePathPrefix.endsWith('/')) {

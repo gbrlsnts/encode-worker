@@ -9,7 +9,7 @@ import {
 } from '@nestjs/bull';
 import { Inject, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { encodeQueueName } from '../config/';
+import { encodeQueueName, sourcePathprefixProvider } from '../config/';
 import { FileSystem } from '../filesystem/filesystem.service';
 import {
   JobCompletedEvent,
@@ -28,7 +28,7 @@ export class EncodeConsumer {
   constructor(
     private eventEmitter: EventEmitter2,
     private filesystem: FileSystem,
-    @Inject('SOURCE_PREFIX')
+    @Inject(sourcePathprefixProvider)
     sourcePathPrefix = 'source',
   ) {
     if (sourcePathPrefix.endsWith('/')) {
