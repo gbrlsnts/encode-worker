@@ -1,45 +1,28 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
-import {
-  OnQueueActive,
-  OnQueueCompleted,
-  OnQueueError,
-  OnQueueFailed,
-  Process,
-  Processor,
-} from '@nestjs/bull';
-import { Inject, Logger } from '@nestjs/common';
-import {
-  JobCompletedEvent,
-  jobCompletedTopic,
-  JobQueueItem,
-  JobState,
-} from '../common';
+import { Process, Processor } from '@nestjs/bull';
+import { Inject } from '@nestjs/common';
+import { JobQueueItem, JobState, rtrimChar, WorkerConsumer } from '../common';
 import { downloadQueueName, sourcePathprefixProvider } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
-import { JobStartedEvent } from '../common/events/job-started.event';
-import { jobStartedTopic } from '../common/events/event-topics';
 
 @Processor(downloadQueueName)
-export class DownloadConsumer {
-  private logger: Logger = new Logger(DownloadConsumer.name);
+export class DownloadConsumer extends WorkerConsumer {
   private sourcePathPrefix: string;
 
   constructor(
-    private eventEmitter: EventEmitter2,
     private filesystem: FileSystem,
+    eventEmitter: EventEmitter2,
     @Inject(sourcePathprefixProvider)
     sourcePathPrefix = 'source',
   ) {
-    if (sourcePathPrefix.endsWith('/')) {
-      sourcePathPrefix = sourcePathPrefix.substring(
-        0,
-        sourcePathPrefix.length - 1,
-      );
-    }
+    super(eventEmitter, DownloadConsumer.name);
+    this.sourcePathPrefix = rtrimChar(sourcePathPrefix, '/');
+  }
 
-    this.sourcePathPrefix = sourcePathPrefix;
+  getWorkerState(): JobState {
+    return JobState.Download;
   }
 
   @Process()
@@ -54,35 +37,5 @@ export class DownloadConsumer {
       sourcePath: localPath,
       priority: job.opts.priority,
     };
-  }
-
-  @OnQueueActive()
-  onActive(job: Job) {
-    const payload = new JobStartedEvent();
-
-    payload.state = JobState.Download;
-    payload.data = job.data;
-
-    this.eventEmitter.emit(jobStartedTopic, payload);
-  }
-
-  @OnQueueCompleted()
-  onComplete(job: Job<JobQueueItem>) {
-    const payload = new JobCompletedEvent();
-
-    payload.state = JobState.Download;
-    payload.data = job.data;
-
-    this.eventEmitter.emit(jobCompletedTopic, payload);
-  }
-
-  @OnQueueError()
-  onError(error: Error) {
-    this.logger.error('Got error', error.stack);
-  }
-
-  @OnQueueFailed()
-  onFailed(job: Job<JobQueueItem>, error: Error) {
-    this.logger.error(`Error on job ${job.data.jobId}`, error.stack);
   }
 }

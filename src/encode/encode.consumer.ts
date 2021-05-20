@@ -1,78 +1,32 @@
 import { Job } from 'bull';
-import {
-  OnQueueActive,
-  OnQueueCompleted,
-  OnQueueError,
-  OnQueueFailed,
-  Process,
-  Processor,
-} from '@nestjs/bull';
-import { Inject, Logger } from '@nestjs/common';
+import { Process, Processor } from '@nestjs/bull';
+import { Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { encodeQueueName, sourcePathprefixProvider } from '../config/';
 import { FileSystem } from '../filesystem/filesystem.service';
-import {
-  JobCompletedEvent,
-  jobCompletedTopic,
-  JobQueueItem,
-  JobStartedEvent,
-  jobStartedTopic,
-  JobState,
-} from 'src/common';
+import { JobQueueItem, JobState, rtrimChar } from 'src/common';
+import { WorkerConsumer } from '../common/abstract/consumer.abstract';
 
 @Processor(encodeQueueName)
-export class EncodeConsumer {
-  private logger: Logger = new Logger(EncodeConsumer.name);
+export class EncodeConsumer extends WorkerConsumer {
   private sourcePathPrefix: string;
 
   constructor(
-    private eventEmitter: EventEmitter2,
     private filesystem: FileSystem,
+    eventEmitter: EventEmitter2,
     @Inject(sourcePathprefixProvider)
     sourcePathPrefix = 'source',
   ) {
-    if (sourcePathPrefix.endsWith('/')) {
-      sourcePathPrefix = sourcePathPrefix.substring(
-        0,
-        sourcePathPrefix.length - 1,
-      );
-    }
+    super(eventEmitter, EncodeConsumer.name);
+    this.sourcePathPrefix = rtrimChar(sourcePathPrefix, '/');
+  }
 
-    this.sourcePathPrefix = sourcePathPrefix;
+  getWorkerState(): JobState {
+    return JobState.Encode;
   }
 
   @Process()
-  async download(job: Job<JobQueueItem>) {
+  async encode(job: Job<JobQueueItem>) {
     return;
-  }
-
-  @OnQueueActive()
-  onActive(job: Job) {
-    const payload = new JobStartedEvent();
-
-    payload.state = JobState.Encode;
-    payload.data = job.data;
-
-    this.eventEmitter.emit(jobStartedTopic, payload);
-  }
-
-  @OnQueueCompleted()
-  onComplete(job: Job<JobQueueItem>) {
-    const payload = new JobCompletedEvent();
-
-    payload.state = JobState.Encode;
-    payload.data = job.data;
-
-    this.eventEmitter.emit(jobCompletedTopic, payload);
-  }
-
-  @OnQueueError()
-  onError(error: Error) {
-    this.logger.error('Got error', error.stack);
-  }
-
-  @OnQueueFailed()
-  onFailed(job: Job<JobQueueItem>, error: Error) {
-    this.logger.error(`Error on job ${job.data.jobId}`, error.stack);
   }
 }
