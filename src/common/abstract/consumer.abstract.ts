@@ -6,6 +6,7 @@ import {
   OnQueueCompleted,
   OnQueueError,
   OnQueueFailed,
+  OnQueueProgress,
 } from '@nestjs/bull';
 import {
   JobCompletedEvent,
@@ -29,13 +30,18 @@ export abstract class WorkerConsumer {
   abstract getWorkerState(): JobState;
 
   @OnQueueActive()
-  onActive(job: Job) {
+  onActive(job: Job<JobQueueItem>) {
     const payload = new JobStartedEvent();
 
     payload.state = this.getWorkerState();
     payload.data = job.data;
 
     this.eventEmitter.emit(jobStartedTopic, payload);
+  }
+
+  @OnQueueProgress()
+  onProgress(job: Job<JobQueueItem>, progress: number) {
+    this.logger.debug(`Progress on job ${job.data.jobId}: ${progress}`);
   }
 
   @OnQueueCompleted()

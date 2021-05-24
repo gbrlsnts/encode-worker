@@ -1,8 +1,4 @@
-import {
-  OutputAudioCodec,
-  OutputFormat,
-  OutputVideoCodec,
-} from './encode.type';
+import { EncodingOptions } from './encode.type';
 
 export interface JobQueueItem {
   jobId: number;
@@ -16,17 +12,7 @@ export interface JobQuery {
   output: JobOutput;
 }
 
-export interface JobOutput {
-  format: OutputFormat;
-  videocodec?: OutputVideoCodec;
-  videoBitrate?: number;
-  crf?: number;
-  width?: number;
-  height?: number;
-  twoPass?: boolean;
-  audioCodec?: OutputAudioCodec;
-  audioBitrate?: number;
-}
+export type JobOutput = EncodingOptions;
 
 export interface JobDestinationDto {
   url: string;

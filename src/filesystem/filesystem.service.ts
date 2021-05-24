@@ -1,6 +1,12 @@
 import { URL } from 'url';
+import { join } from 'path';
 import { Inject, Injectable } from '@nestjs/common';
-import { StorageManager, Storage } from '@slynova/flydrive';
+import { localConfig } from '../config/flysystem';
+import {
+  StorageManager,
+  Storage,
+  LocalFileSystemStorage,
+} from '@slynova/flydrive';
 import {
   DriveStorage,
   flydriveProvider,
@@ -35,6 +41,20 @@ export class FileSystem {
     ]);
 
     this.queuedHost = new URL(queueStorageConfig.endpoint).host;
+  }
+
+  /**
+   * Get the absolute path in a location from its relative path
+   * @param relative relative path
+   * @param location location to get the absolute path
+   * @returns the absolute path
+   */
+  getAbsolutePath(relative: string, location: LocationType): string {
+    if (location === LocationType.Local) {
+      return join(localConfig.config.root, relative);
+    }
+
+    return this.getStorageByLocationType(location).getUrl(relative);
   }
 
   /**

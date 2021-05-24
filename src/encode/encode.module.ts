@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { encodeQueueName, sourcePathPrefix } from '../config/';
+import { encodeQueueName, outputPathPrefix } from '../config/';
 import { EncodeService } from './encode.service';
 import { EncodeConsumer } from './encode.consumer';
 import { FilesystemModule } from '../filesystem/filesystem.module';
@@ -12,6 +12,6 @@ import { FilesystemModule } from '../filesystem/filesystem.module';
     }),
     FilesystemModule,
   ],
-  providers: [sourcePathPrefix, EncodeService, EncodeConsumer],
+  providers: [outputPathPrefix, EncodeService, EncodeConsumer],
 })
 export class EncodeModule {}

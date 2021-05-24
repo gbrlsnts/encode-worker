@@ -17,4 +17,5 @@ export const configSchema = Joi.object({
   STORAGE_KEY: Joi.string().min(1),
   STORAGE_SECRET: Joi.string().min(1),
   DOWNLOADED_FOLDER: Joi.string().min(1),
+  ENCODED_FOLDER: Joi.string().min(1),
 });

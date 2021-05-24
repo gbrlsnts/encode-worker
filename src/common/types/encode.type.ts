@@ -12,3 +12,15 @@ export enum OutputAudioCodec {
   aac = 'aac',
   libfdk_aac = 'libfdk_aac',
 }
+
+export interface EncodingOptions {
+  format: OutputFormat;
+  videocodec?: OutputVideoCodec;
+  videoBitrate?: number;
+  crf?: number;
+  width?: number;
+  height?: number;
+  twoPass?: boolean;
+  audioCodec?: OutputAudioCodec;
+  audioBitrate?: number;
+}
