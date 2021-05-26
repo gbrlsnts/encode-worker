@@ -89,7 +89,7 @@ export class Encoder {
               this.calculateProgress(
                 progress,
                 currentPass,
-                twoPass.enabled ? 2 : 1,
+                twoPass?.enabled ? 2 : 1,
               ),
             ),
           duration,
@@ -115,15 +115,17 @@ export class Encoder {
    * @param cmd the command to set options
    */
   private mapOptionsToCommand(cmd: ffmpeg.FfmpegCommand): void {
-    const setterMap = new Map<any, string>([
-      [this.options.videocodec, 'videoCodec'],
-      [this.options.audioCodec, 'audioCodec'],
-      [this.options.videoBitrate, 'videoBitrate'],
-    ]);
+    if (this.options.videocodec) cmd.videoCodec(this.options.videocodec);
+    if (this.options.videoBitrate) cmd.videoBitrate(this.options.videoBitrate);
+    if (this.options.audioCodec) cmd.audioCodec(this.options.audioCodec);
+    if (this.options.audioBitrate) cmd.audioBitrate(this.options.audioBitrate);
+    if (this.options.crf) cmd.addOption(['-crf', this.options.crf.toString()]);
 
-    // set the options if they are defined
-    for (const [value, setter] of setterMap.entries())
-      if (value) cmd[setter](value);
+    if (this.options.width || this.options.height) {
+      const width = this.options.width || '?';
+      const height = this.options.height || '?';
+      cmd.size(`${width}x${height}`);
+    }
   }
 
   /**
