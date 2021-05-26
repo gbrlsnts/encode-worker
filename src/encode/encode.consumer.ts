@@ -40,7 +40,17 @@ export class EncodeConsumer extends WorkerConsumer {
       LocationType.Local,
     );
 
-    const encoder = new Encoder(job.data.query.output, source, destination);
+    const passLogFile = this.filesystem.getAbsolutePath(
+      `${this.outputPathPrefix}/${job.data.metadata.localFilesId}.logfile`,
+      LocationType.Local,
+    );
+
+    const encoder = new Encoder(
+      job.data.query.output,
+      source,
+      destination,
+      passLogFile,
+    );
 
     await encoder
       .run()

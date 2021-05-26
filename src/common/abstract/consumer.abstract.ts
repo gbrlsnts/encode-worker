@@ -60,7 +60,10 @@ export abstract class WorkerConsumer {
   }
 
   @OnQueueFailed()
-  onFailed(job: Job<JobQueueItem>, error: Error) {
-    this.logger.error(`Error on job ${job.data.jobId}`, error.stack);
+  onFailed(job: Job<JobQueueItem>, error: Error | string) {
+    const detail =
+      error instanceof Error ? error.stack ?? error.message : error.toString();
+
+    this.logger.error(`Error on job ${job.data.jobId}`, detail);
   }
 }
