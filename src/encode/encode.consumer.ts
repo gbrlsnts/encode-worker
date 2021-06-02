@@ -6,8 +6,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { encodeQueueName, outputPathprefixProvider } from '../config/';
 import { FileSystem } from '../filesystem/filesystem.service';
 import { LocationType } from 'src/filesystem/types';
-import { JobQueueItem, JobState, rtrimChar } from 'src/common';
-import { WorkerConsumer } from '../common/abstract/consumer.abstract';
+import {
+  EncodeJobQueueItem,
+  JobState,
+  rtrimChar,
+  EncodeResult,
+  WorkerConsumer,
+} from 'src/common';
 import { Encoder } from './encoder';
 
 @Processor(encodeQueueName)
@@ -29,14 +34,16 @@ export class EncodeConsumer extends WorkerConsumer {
   }
 
   @Process()
-  async encode(job: Job<JobQueueItem>) {
+  async encode(job: Job<EncodeJobQueueItem>): Promise<EncodeResult> {
     const source = this.filesystem.getAbsolutePath(
       job.data.metadata.sourcePath,
       LocationType.Local,
     );
 
+    const relativeDestination = `${this.outputPathPrefix}/${job.data.metadata.localFilesId}.${job.data.query.output.format}`;
+
     const destination = this.filesystem.getAbsolutePath(
-      `${this.outputPathPrefix}/${job.data.metadata.localFilesId}.${job.data.query.output.format}`,
+      relativeDestination,
       LocationType.Local,
     );
 
@@ -59,5 +66,9 @@ export class EncodeConsumer extends WorkerConsumer {
         tap((progress) => job.progress(progress)),
       )
       .toPromise();
+
+    return {
+      path: relativeDestination,
+    };
   }
 }

@@ -27,6 +27,10 @@ export class WorkerEventsListener {
       `Job completed ${event.data.jobId}/${event.data.query.output.format} | ${event.state}`,
     );
 
-    await this.managerService.pushJobState(event.state, event.data);
+    await this.managerService.pushJobState(
+      event.state,
+      event.data,
+      event.returnValue,
+    );
   }
 }

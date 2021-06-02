@@ -3,7 +3,13 @@ import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
 import { Process, Processor } from '@nestjs/bull';
 import { Inject } from '@nestjs/common';
-import { JobQueueItem, JobState, rtrimChar, WorkerConsumer } from '../common';
+import {
+  DownloadResult,
+  JobQueueItem,
+  JobState,
+  rtrimChar,
+  WorkerConsumer,
+} from '../common';
 import { downloadQueueName, sourcePathprefixProvider } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
 
@@ -26,16 +32,15 @@ export class DownloadConsumer extends WorkerConsumer {
   }
 
   @Process()
-  async download(job: Job<JobQueueItem>) {
+  async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
     const uuid = uuidv4();
     const localPath = `${this.sourcePathPrefix}/${uuid}.job`;
 
     await this.filesystem.download(job.data.query.source, localPath);
 
-    job.data.metadata = {
+    return {
       localFilesId: uuid,
       sourcePath: localPath,
-      priority: job.opts.priority,
     };
   }
 }

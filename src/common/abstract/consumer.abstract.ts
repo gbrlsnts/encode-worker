@@ -50,6 +50,7 @@ export abstract class WorkerConsumer {
 
     payload.state = this.getWorkerState();
     payload.data = job.data;
+    payload.returnValue = job.returnvalue;
 
     this.eventEmitter.emit(jobCompletedTopic, payload);
   }

@@ -1,7 +1,7 @@
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { JobState, JobQueueItem } from '../common';
+import { JobQueueItem, JobState, WorkerJob } from '../common';
 import { encodeQueueName, storeQueueName } from '../config/queue';
 
 @Injectable()
@@ -18,7 +18,18 @@ export class ManagerService {
     ]);
   }
 
-  async pushJobState(currentState: JobState, job: JobQueueItem): Promise<void> {
+  /**
+   * Push a job to the next state, if any
+   *
+   * @param currentState current state
+   * @param carryOverJob job data that is being carried over
+   * @param returnData returned data in  current state
+   */
+  async pushJobState(
+    currentState: JobState,
+    carryOverJob: JobQueueItem,
+    returnData?: any,
+  ): Promise<void> {
     const state = this.getNextState(currentState);
 
     if (!state) return;
@@ -26,6 +37,12 @@ export class ManagerService {
     const queue = this.stateQueueMap.get(state);
 
     if (!queue) return;
+
+    const job: WorkerJob = {
+      ...carryOverJob,
+      state,
+      metadata: returnData,
+    };
 
     await queue.add(job);
   }

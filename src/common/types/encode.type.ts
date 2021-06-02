@@ -24,3 +24,7 @@ export interface EncodingOptions {
   audioCodec?: OutputAudioCodec;
   audioBitrate?: number;
 }
+
+export interface EncodeResult {
+  path: string;
+}

@@ -78,7 +78,11 @@ export class FileSystem {
    * @param localPath
    */
   async upload(localPath: string, remoteUrl: string): Promise<void> {
-    throw new Error('Method not implemented');
+    const parsed = this.parseLocation(remoteUrl);
+    const storage = this.getStorageByLocationType(parsed.type);
+
+    const stream = await this.getStreamSafe(this.localStorage, localPath);
+    await storage.put(remoteUrl, stream);
   }
 
   /**
