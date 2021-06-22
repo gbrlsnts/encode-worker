@@ -1,12 +1,9 @@
 import { URL } from 'url';
 import { join } from 'path';
+import { AmazonWebServicesS3Storage } from '@slynova/flydrive-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { localConfig } from '../config/flysystem';
-import {
-  StorageManager,
-  Storage,
-  LocalFileSystemStorage,
-} from '@slynova/flydrive';
+import { StorageManager, Storage } from '@slynova/flydrive';
 import {
   DriveStorage,
   flydriveProvider,
@@ -16,6 +13,8 @@ import {
   LocationType,
   Location,
   S3StorageConfig,
+  StorageConnectionOptions,
+  FileOperationOptions,
 } from './types';
 
 @Injectable()
@@ -62,10 +61,19 @@ export class FileSystem {
    * If the URLs match either the configured local or queued job storage, it will use it, otherwise will try to connect and fetch.
    * @param remoteUrl
    * @param localPath
+   * @param remoteOpts options for the remote connection
    */
-  async download(remoteUrl: string, localPath: string): Promise<void> {
+  async download(
+    remoteUrl: string,
+    localPath: string,
+    remoteOpts?: FileOperationOptions,
+  ): Promise<void> {
     const parsed = this.parseLocation(remoteUrl);
-    const storage = this.getStorageByLocationType(parsed.type);
+
+    const storage = this.getStorageByLocationType(
+      parsed.type,
+      this.opOptsToStorageConnOpts(parsed, remoteOpts),
+    );
 
     const stream = await this.getStreamSafe(storage, parsed.object);
     await this.localStorage.put(localPath, stream);
@@ -76,13 +84,22 @@ export class FileSystem {
    * If the URLs match either the configured local or queued job storage, it will use it, otherwise will try to connect and upload.
    * @param remoteUrl
    * @param localPath
+   * @param remoteOpts options for the remote connection
    */
-  async upload(localPath: string, remoteUrl: string): Promise<void> {
+  async upload(
+    localPath: string,
+    remoteUrl: string,
+    remoteOpts?: FileOperationOptions,
+  ): Promise<void> {
     const parsed = this.parseLocation(remoteUrl);
-    const storage = this.getStorageByLocationType(parsed.type);
+
+    const storage = this.getStorageByLocationType(
+      parsed.type,
+      this.opOptsToStorageConnOpts(parsed, remoteOpts),
+    );
 
     const stream = await this.getStreamSafe(this.localStorage, localPath);
-    await storage.put(remoteUrl, stream);
+    await storage.put(parsed.object, stream);
   }
 
   /**
@@ -179,16 +196,75 @@ export class FileSystem {
   }
 
   /**
-   * Get a storage by a LocationType
+   * Get a storage by a Location
+   * TODO: Refactor into factory class?
    * @param type
+   * @param remoteOpts options for the remote connection
    * @returns Storage
    */
-  getStorageByLocationType(type: LocationType): Storage {
+  getStorageByLocationType(
+    type: LocationType,
+    remoteOpts?: StorageConnectionOptions,
+  ): Storage {
     const mapped = this.locationTypeMap.get(type);
 
     if (mapped) return mapped;
 
-    throw new Error(`Unsupported location type: ${type}`);
+    if (!remoteOpts)
+      throw new Error(
+        `Remote options must be provided for custom location types.`,
+      );
+
+    // maybe abstract this later
+    switch (type) {
+      case LocationType.S3:
+        if (remoteOpts.type !== type)
+          throw new Error(
+            `No connection options available. Required: ${type}. Provided: ${remoteOpts.type}`,
+          );
+
+        const manager = new StorageManager({
+          disks: {
+            remote: {
+              driver: 's3',
+              config: { ...remoteOpts.options, s3ForcePathStyle: true },
+            },
+          },
+        });
+
+        manager.registerDriver('s3', AmazonWebServicesS3Storage);
+
+        return manager.disk('remote');
+      default:
+        throw new Error(`Unsupported location type: ${type}`);
+    }
+  }
+
+  /**
+   * Map a file operation options to storage connection options
+   * TODO: Refactor into factory class?
+   * @param location
+   * @param options
+   * @returns StorageConnectionOptions
+   */
+  private opOptsToStorageConnOpts(
+    location: Location,
+    options: FileOperationOptions,
+  ): StorageConnectionOptions {
+    if (!location || !options) return;
+
+    switch (location.type) {
+      case LocationType.S3:
+        return {
+          type: location.type,
+          options: {
+            endpoint: `http://${location.host}`,
+            bucket: location.bucket,
+            key: options.key,
+            secret: options.secret,
+          },
+        };
+    }
   }
 
   /**

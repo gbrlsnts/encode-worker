@@ -29,3 +29,15 @@ export interface Location {
   bucket?: string;
   object: string;
 }
+
+export interface S3ConnectionOptions {
+  type: LocationType.S3;
+  options: S3StorageConfig;
+}
+
+export type StorageConnectionOptions = S3ConnectionOptions;
+
+export interface FileOperationOptions {
+  key: string;
+  secret: string;
+}

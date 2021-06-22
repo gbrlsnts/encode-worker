@@ -27,6 +27,11 @@ export class StorageConsumer extends WorkerConsumer {
     if (!localFilesystem.exists(localFile))
       throw new Error('File does not exist');
 
-    await this.filesystem.upload(localFile, job.data.query.destination.url);
+    const { key, secret } = job.data.query.destination;
+
+    await this.filesystem.upload(localFile, job.data.query.destination.url, {
+      key,
+      secret,
+    });
   }
 }
