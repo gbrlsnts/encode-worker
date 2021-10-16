@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^7.6.15",
     "@slynova/flydrive": "^1.0.3",
     "@slynova/flydrive-s3": "^1.0.3",
+    "axios": "^0.21.1",
     "bull": "^3.22.4",
     "ffmpeg-on-progress": "^1.0.0",
     "ffmpeg-static": "^4.3.0",

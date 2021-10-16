@@ -12,10 +12,12 @@ import {
 } from '../common';
 import { downloadQueueName, sourcePathprefixProvider } from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
+import { HttpFileDriver } from '../lib/';
 
 @Processor(downloadQueueName)
 export class DownloadConsumer extends WorkerConsumer {
   private sourcePathPrefix: string;
+  private httpFileDriver: HttpFileDriver;
 
   constructor(
     private filesystem: FileSystem,
@@ -25,6 +27,7 @@ export class DownloadConsumer extends WorkerConsumer {
   ) {
     super(eventEmitter, DownloadConsumer.name);
     this.sourcePathPrefix = rtrimChar(sourcePathPrefix, '/');
+    this.httpFileDriver = new HttpFileDriver();
   }
 
   getWorkerState(): JobState {
@@ -35,8 +38,13 @@ export class DownloadConsumer extends WorkerConsumer {
   async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
     const uuid = uuidv4();
     const localPath = `${this.sourcePathPrefix}/${uuid}.job`;
+    const src = job.data.query.source;
 
-    await this.filesystem.download(job.data.query.source, localPath);
+    if (src.startsWith('http')) {
+      await this.httpFileDriver.save(src, localPath);
+    } else {
+      await this.filesystem.download(src, localPath);
+    }
 
     return {
       localFilesId: uuid,

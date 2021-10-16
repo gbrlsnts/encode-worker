@@ -1,9 +1,9 @@
 import { URL } from 'url';
 import { join } from 'path';
-import { AmazonWebServicesS3Storage } from '@slynova/flydrive-s3';
 import { Inject, Injectable } from '@nestjs/common';
 import { localConfig } from '../config/flysystem';
 import { StorageManager, Storage } from '@slynova/flydrive';
+import { RemoteFilesystemFactoryService } from './remote-fs-factory.service';
 import {
   DriveStorage,
   flydriveProvider,
@@ -30,6 +30,7 @@ export class FileSystem {
     manager: StorageManager,
     @Inject(queueStorageConfig)
     queueStorageConfig: S3StorageConfig,
+    protected remoteFsFactory: RemoteFilesystemFactoryService,
   ) {
     this.localStorage = manager.disk(DriveStorage.Local);
     this.remoteStorage = manager.disk(DriveStorage.Queued);
@@ -184,9 +185,6 @@ export class FileSystem {
     switch (protocol) {
       case 's3':
         return LocationType.S3;
-      case 'http':
-      case 'https':
-        return LocationType.HTTP;
       case 'ftp':
       case 'ftps':
         return LocationType.FTP;
@@ -210,34 +208,9 @@ export class FileSystem {
 
     if (mapped) return mapped;
 
-    if (!remoteOpts)
-      throw new Error(
-        `Remote options must be provided for custom location types.`,
-      );
+    if (!remoteOpts) remoteOpts = { type, options: undefined };
 
-    // maybe abstract this later
-    switch (type) {
-      case LocationType.S3:
-        if (remoteOpts.type !== type)
-          throw new Error(
-            `No connection options available. Required: ${type}. Provided: ${remoteOpts.type}`,
-          );
-
-        const manager = new StorageManager({
-          disks: {
-            remote: {
-              driver: 's3',
-              config: { ...remoteOpts.options, s3ForcePathStyle: true },
-            },
-          },
-        });
-
-        manager.registerDriver('s3', AmazonWebServicesS3Storage);
-
-        return manager.disk('remote');
-      default:
-        throw new Error(`Unsupported location type: ${type}`);
-    }
+    return this.remoteFsFactory.makeStorage(remoteOpts);
   }
 
   /**

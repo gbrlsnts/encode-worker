@@ -5,11 +5,15 @@ import { FileSystem } from '../filesystem/filesystem.service';
 import { storeQueueName } from '../config/queue';
 import { JobState, WorkerConsumer, StoreJobQueueItem } from '../common';
 import { LocationType } from 'src/filesystem/types';
+import { HttpFileDriver } from '../lib/';
 
 @Processor(storeQueueName)
 export class StorageConsumer extends WorkerConsumer {
+  private httpFileDriver: HttpFileDriver;
+
   constructor(private filesystem: FileSystem, eventEmitter: EventEmitter2) {
     super(eventEmitter, StorageConsumer.name);
+    this.httpFileDriver = new HttpFileDriver();
   }
 
   getWorkerState(): JobState {
@@ -27,11 +31,17 @@ export class StorageConsumer extends WorkerConsumer {
     if (!localFilesystem.exists(localFile))
       throw new Error('File does not exist');
 
-    const { key, secret } = job.data.query.destination;
+    const dest = job.data.query.destination.url;
 
-    await this.filesystem.upload(localFile, job.data.query.destination.url, {
-      key,
-      secret,
-    });
+    if (dest.startsWith('http')) {
+      await this.httpFileDriver.upload(dest, localFile);
+    } else {
+      const { key, secret } = job.data.query.destination;
+
+      await this.filesystem.upload(localFile, job.data.query.destination.url, {
+        key,
+        secret,
+      });
+    }
   }
 }

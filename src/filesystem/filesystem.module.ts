@@ -5,6 +5,7 @@ import { AmazonWebServicesS3Storage } from '@slynova/flydrive-s3';
 import { localConfig } from '../config/flysystem';
 import { flydriveProvider, queueStorageConfig, S3StorageConfig } from './types';
 import { FileSystem } from './filesystem.service';
+import { RemoteFilesystemFactoryService } from './remote-fs-factory.service';
 
 @Module({
   providers: [
@@ -40,6 +41,7 @@ import { FileSystem } from './filesystem.service';
       },
       inject: [queueStorageConfig],
     },
+    RemoteFilesystemFactoryService,
     FileSystem,
   ],
   exports: [FileSystem],

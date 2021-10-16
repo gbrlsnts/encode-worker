@@ -17,7 +17,6 @@ export enum LocationType {
   Local,
   Queued,
   S3,
-  HTTP,
   FTP,
 }
 
@@ -30,12 +29,18 @@ export interface Location {
   object: string;
 }
 
+export interface DefaultConnectionOptions {
+  type: LocationType.Local | LocationType.Queued | LocationType.FTP;
+}
+
 export interface S3ConnectionOptions {
   type: LocationType.S3;
   options: S3StorageConfig;
 }
 
-export type StorageConnectionOptions = S3ConnectionOptions;
+export type StorageConnectionOptions =
+  | DefaultConnectionOptions
+  | S3ConnectionOptions;
 
 export interface FileOperationOptions {
   key: string;
