@@ -7,7 +7,7 @@ export class HttpFileDriver {
   private axios: AxiosInstance;
 
   constructor(headers?: HttpHeader[]) {
-    const headersConfig = headers.reduce(
+    const headersConfig = headers?.reduce(
       (obj, header) => ({ ...obj, [header.key]: header.value }),
       {},
     );
