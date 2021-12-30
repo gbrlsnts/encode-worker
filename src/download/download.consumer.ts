@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
 import { Process, Processor } from '@nestjs/bull';
@@ -9,7 +10,11 @@ import {
   rtrimChar,
   WorkerConsumer,
 } from '../common';
-import { downloadQueueName, sourcePathprefixProvider } from '../config';
+import {
+  downloadQueueName,
+  sourcePathprefixProvider,
+  rootDirectory,
+} from '../config';
 import { FileSystem } from '../filesystem/filesystem.service';
 import { HttpFileDriver } from '../lib/';
 
@@ -26,7 +31,9 @@ export class DownloadConsumer extends WorkerConsumer {
   ) {
     super(eventEmitter, DownloadConsumer.name);
     this.sourcePathPrefix = rtrimChar(sourcePathPrefix, '/');
-    this.httpFileDriver = new HttpFileDriver();
+
+    // should be injected
+    this.httpFileDriver = new HttpFileDriver(rootDirectory);
   }
 
   getWorkerState(): JobState {
@@ -35,7 +42,7 @@ export class DownloadConsumer extends WorkerConsumer {
 
   @Process()
   async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
-    const localPath = `${this.sourcePathPrefix}/${job.data.jobId}.job`;
+    const localPath = join(this.sourcePathPrefix, `${job.data.jobId}.job`);
     const src = job.data.query.source;
 
     if (src.startsWith('http')) {

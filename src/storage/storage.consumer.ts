@@ -2,7 +2,7 @@ import { Job } from 'bull';
 import { Process, Processor } from '@nestjs/bull';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileSystem } from '../filesystem/filesystem.service';
-import { storeQueueName } from '../config/queue';
+import { storeQueueName, rootDirectory } from '../config';
 import { JobState, WorkerConsumer, StoreJobQueueItem } from '../common';
 import { LocationType } from 'src/filesystem/types';
 import { HttpFileDriver } from '../lib/';
@@ -13,7 +13,9 @@ export class StorageConsumer extends WorkerConsumer {
 
   constructor(private filesystem: FileSystem, eventEmitter: EventEmitter2) {
     super(eventEmitter, StorageConsumer.name);
-    this.httpFileDriver = new HttpFileDriver();
+
+    // should be injected
+    this.httpFileDriver = new HttpFileDriver(rootDirectory);
   }
 
   getWorkerState(): JobState {

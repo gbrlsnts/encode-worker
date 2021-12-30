@@ -1,12 +1,18 @@
 import { createReadStream, createWriteStream, ReadStream } from 'fs';
 import { stat } from 'fs/promises';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { HttpHeader } from '../../common/types/http.type';
+import {
+  HttpHeader,
+  createDirectoryRecursive,
+  directoryExists,
+} from '../../common/';
+import { parse, join } from 'path';
+import { rootDirectory } from '../../config/flysystem';
 
 export class HttpFileDriver {
   private axios: AxiosInstance;
 
-  constructor(headers?: HttpHeader[]) {
+  constructor(public rootFolder: string, headers?: HttpHeader[]) {
     const headersConfig = headers?.reduce(
       (obj, header) => ({ ...obj, [header.key]: header.value }),
       {},
@@ -67,15 +73,24 @@ export class HttpFileDriver {
    * @returns
    */
   async save(url: string, path: string, headers?: HttpHeader[]): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.get(url, headers)
-        .then((stream) =>
-          stream
-            .prependListener('end', () => resolve())
-            .prependListener('error', (e) => reject(e))
-            .pipe(createWriteStream(path)),
-        )
-        .catch((e) => reject(e));
+    path = join(rootDirectory, path);
+    const parsedPath = parse(path);
+
+    if (!(await directoryExists(parsedPath.dir)))
+      createDirectoryRecursive(parsedPath.dir);
+
+    return new Promise(async (resolve, reject) => {
+      const readStream = await this.get(url, headers);
+
+      readStream.on('end', () => resolve()).on('error', (e) => reject(e));
+
+      const writeStream = createWriteStream(path, {
+        encoding: 'binary',
+      })
+        .on('close', () => resolve())
+        .on('error', (e) => reject(e));
+
+      readStream.pipe(writeStream);
     });
   }
 
@@ -91,6 +106,8 @@ export class HttpFileDriver {
     path: string,
     headers?: HttpHeader[],
   ): Promise<void> {
+    path = join(rootDirectory, path);
+
     return new Promise((resolve, reject) => {
       stat(path)
         .then((stats) => stats.size)
