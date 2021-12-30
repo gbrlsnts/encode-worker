@@ -3,7 +3,7 @@ import { EncodingOptions, EncodeResult } from './encode.type';
 import { JobState } from './job.type';
 
 export interface JobQueueItem {
-  jobId: number;
+  jobId: string;
   query: JobQuery;
 }
 

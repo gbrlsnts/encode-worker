@@ -40,7 +40,7 @@ export class EncodeConsumer extends WorkerConsumer {
       LocationType.Local,
     );
 
-    const relativeDestination = `${this.outputPathPrefix}/${job.data.metadata.localFilesId}.${job.data.query.output.format}`;
+    const relativeDestination = `${this.outputPathPrefix}/${job.data.jobId}.${job.data.query.output.format}`;
 
     const destination = this.filesystem.getAbsolutePath(
       relativeDestination,
@@ -48,7 +48,7 @@ export class EncodeConsumer extends WorkerConsumer {
     );
 
     const passLogFile = this.filesystem.getAbsolutePath(
-      `${this.outputPathPrefix}/${job.data.metadata.localFilesId}.logfile`,
+      `${this.outputPathPrefix}/${job.data.jobId}.logfile`,
       LocationType.Local,
     );
 

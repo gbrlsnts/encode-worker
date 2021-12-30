@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
 import { Process, Processor } from '@nestjs/bull';
@@ -36,8 +35,7 @@ export class DownloadConsumer extends WorkerConsumer {
 
   @Process()
   async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
-    const uuid = uuidv4();
-    const localPath = `${this.sourcePathPrefix}/${uuid}.job`;
+    const localPath = `${this.sourcePathPrefix}/${job.data.jobId}.job`;
     const src = job.data.query.source;
 
     if (src.startsWith('http')) {
@@ -47,7 +45,6 @@ export class DownloadConsumer extends WorkerConsumer {
     }
 
     return {
-      localFilesId: uuid,
       sourcePath: localPath,
     };
   }
