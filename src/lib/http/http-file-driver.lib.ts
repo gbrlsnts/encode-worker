@@ -1,5 +1,5 @@
+import * as FormData from 'form-data';
 import { createReadStream, createWriteStream, ReadStream } from 'fs';
-import { stat } from 'fs/promises';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   HttpHeader,
@@ -19,6 +19,9 @@ export class HttpFileDriver {
     );
 
     this.axios = axios.create({
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 10000,
       headers: headersConfig,
     });
   }
@@ -30,7 +33,7 @@ export class HttpFileDriver {
    * @returns ReadableStream
    */
   async get(url: string, headers?: HttpHeader[]): Promise<ReadStream> {
-    const response = await axios.request<any, AxiosResponse<ReadStream>>({
+    const response = await this.axios.request<any, AxiosResponse<ReadStream>>({
       method: 'get',
       url,
       responseType: 'stream',
@@ -44,24 +47,25 @@ export class HttpFileDriver {
    * Send a file to an url
    * @param url url to upload to
    * @param contents contents to send
-   * @param size content size
    * @param headers custom headers to send
    */
   async put(
     url: string,
     contents: ReadStream,
-    size: number,
     headers?: HttpHeader[],
   ): Promise<void> {
-    return axios.request({
+    // improve for chunk uploads? or config in query
+    const form = new FormData();
+    form.append('file', contents);
+
+    return this.axios.request({
       method: 'post',
       url,
       headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': size,
+        ...form.getHeaders(),
         ...headers,
       },
-      data: contents,
+      data: form,
     });
   }
 
@@ -108,23 +112,17 @@ export class HttpFileDriver {
   ): Promise<void> {
     path = join(rootDirectory, path);
 
-    return new Promise((resolve, reject) => {
-      stat(path)
-        .then((stats) => stats.size)
-        .then((size) => {
-          const stream = createReadStream(path);
+    return new Promise(async (resolve, reject) => {
+      try {
+        const stream = createReadStream(path);
 
-          stream.on('end', () => resolve());
-          stream.on('error', (e) => reject(e));
+        stream.on('error', (e) => reject(e));
 
-          return {
-            size,
-            stream,
-          };
-        })
-        .then((data) => this.put(url, data.stream, data.size, headers))
-        .then(() => resolve())
-        .catch((e) => reject(e));
+        await this.put(url, stream, headers);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 }
