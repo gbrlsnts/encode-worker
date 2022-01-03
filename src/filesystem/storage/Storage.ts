@@ -1,13 +1,10 @@
 import { StorageInterface } from './StorageInterface';
-import { LocalStorage } from './drivers/LocalStorage';
 
 export class Storage implements StorageInterface {
   /**
    * The registered drivers per protocol
    */
-  private _drivers: Record<string, StorageInterface> = {
-    file: new LocalStorage(), // provide file as default
-  };
+  private _drivers: Record<string, StorageInterface>;
 
   /**
    * Get a readable stream for a URI
