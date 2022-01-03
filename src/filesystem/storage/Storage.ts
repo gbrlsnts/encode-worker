@@ -1,10 +1,11 @@
 import { StorageInterface } from './StorageInterface';
+import { StorageDriver } from './StorageDriver';
 
 export class Storage implements StorageInterface {
   /**
-   * The registered drivers per protocol
+   * The registered drivers
    */
-  private _drivers: Record<string, StorageInterface> = {};
+  private _drivers: StorageDriver[] = [];
 
   /**
    * Get a readable stream for a URI
@@ -33,7 +34,7 @@ export class Storage implements StorageInterface {
   /**
    * Get all enabled drivers
    */
-  get drivers(): Record<string, StorageInterface> {
+  drivers(): StorageInterface[] {
     return this._drivers;
   }
 
@@ -55,7 +56,7 @@ export class Storage implements StorageInterface {
    * @returns a driver
    */
   getDriver(protocol: string): StorageInterface | undefined {
-    return this._drivers[protocol];
+    return this._drivers.find((storage) => storage.handles(protocol));
   }
 
   /**

@@ -2,16 +2,16 @@ import { Client, FTPError } from 'basic-ftp';
 import { PassThrough } from 'stream';
 import { Logger } from '@nestjs/common';
 import { FtpStorageConfig } from '../../types';
-import { AbstractStorage } from '../AbstractStorage';
+import { StorageDriver } from '../StorageDriver';
 
-export class FtpStorage extends AbstractStorage {
+export class FtpStorage extends StorageDriver {
   protected readonly logger: Logger;
 
   private $driver: Client;
   private connected = false;
 
   constructor(private config: FtpStorageConfig, private secure = false) {
-    super('ftp');
+    super(['ftp', 'ftps']);
 
     this.logger = new Logger(FtpStorage.name);
 
@@ -93,7 +93,8 @@ export class FtpStorage extends AbstractStorage {
    * @returns a path
    */
   protected getPath(uri: string): string {
-    return uri.replace(this.protoStringStart, '');
+    // replaces the proto identification (e.g. ftp://)
+    return uri.replace(/^[\w+]+:\/\/.*$/i, '');
   }
 
   protected async connect(): Promise<void> {

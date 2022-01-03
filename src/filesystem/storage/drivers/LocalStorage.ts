@@ -1,11 +1,11 @@
 import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
-import { AbstractStorage } from '../AbstractStorage';
+import { StorageDriver } from '../StorageDriver';
 
 /**
  * Local storage driver. All URIs should start with file://
  */
-export class LocalStorage extends AbstractStorage {
+export class LocalStorage extends StorageDriver {
   constructor() {
     super('file');
   }

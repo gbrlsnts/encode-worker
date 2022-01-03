@@ -3,17 +3,13 @@ import { ReadStream } from 'fs';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PassThrough } from 'stream';
 import { HttpHeader } from '../../../common/';
-import { AbstractStorage } from '../AbstractStorage';
+import { StorageDriver } from '../StorageDriver';
 
-export class HttpStorage extends AbstractStorage {
+export class HttpStorage extends StorageDriver {
   private $driver: AxiosInstance;
 
-  constructor(
-    protocol = 'http',
-    public rootFolder: string,
-    headers?: HttpHeader[],
-  ) {
-    super(protocol); // todo: should we support multiple or duplicate the instance for https?
+  constructor(public rootFolder: string, headers?: HttpHeader[]) {
+    super(['http', 'https']);
 
     const headersConfig = headers?.reduce(
       (obj, header) => ({ ...obj, [header.key]: header.value }),

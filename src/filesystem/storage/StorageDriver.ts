@@ -1,13 +1,25 @@
 import { Logger } from '@nestjs/common';
 import { StorageInterface } from './StorageInterface';
+import { DriverInterface } from './DriverInterface';
 
-export abstract class AbstractStorage implements StorageInterface {
+export abstract class StorageDriver
+  implements StorageInterface, DriverInterface {
+  /**
+   * Logger instance
+   */
   protected readonly logger: Logger;
-  protected protoStringStart: string;
 
-  constructor(protected protocol: string) {
-    this.logger = new Logger(AbstractStorage.name);
-    this.protoStringStart = `${this.protocol}://`;
+  /**
+   * The protocols this storage can handle
+   */
+  protected handledProtocols: string[] = [];
+
+  constructor(protocols: string | string[]) {
+    this.logger = new Logger(StorageDriver.name);
+
+    this.handledProtocols.concat(
+      typeof protocols === 'string' ? [protocols] : protocols,
+    );
   }
 
   /**
@@ -48,13 +60,35 @@ export abstract class AbstractStorage implements StorageInterface {
   }
 
   /**
+   * Get the supported protocols
+   * @returns true if protocol is handled by this storage
+   */
+  protocols(): string[] {
+    return this.handledProtocols;
+  }
+
+  /**
+   * Check if this storage handles a protocol
+   * @param protocol protocol to check
+   * @returns true if protocol is handled by this storage
+   */
+  handles(protocol: string): boolean {
+    return this.handledProtocols.includes(protocol);
+  }
+
+  /**
    * Validate a URI to use within the driver
    * @param uri uri to validate
    */
   validateUri(uri: string): void {
-    if (!uri.startsWith(`${this.protoStringStart}`))
-      throw new Error(
-        `Invalid storage URI. Must start with ${this.protoStringStart}`,
-      );
+    for (const protocol in this.handledProtocols) {
+      if (uri.startsWith(`${protocol}`)) return;
+    }
+
+    const handled = this.handledProtocols.join(', ');
+
+    throw new Error(
+      `Invalid storage URI. Must start with one of the following: ${handled}`,
+    );
   }
 }

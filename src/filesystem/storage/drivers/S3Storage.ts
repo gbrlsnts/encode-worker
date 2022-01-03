@@ -1,12 +1,12 @@
 import { S3 } from 'aws-sdk';
 import { PassThrough } from 'stream';
-import { AbstractStorage } from '../AbstractStorage';
+import { StorageDriver } from '../StorageDriver';
 import { S3StorageConfig } from '../../types/';
 
 /**
  * Local storage driver. All URIs should start with s3://
  */
-export class S3Storage extends AbstractStorage {
+export class S3Storage extends StorageDriver {
   private $driver: S3;
   private $bucket: string;
 
