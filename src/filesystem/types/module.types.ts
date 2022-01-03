@@ -13,6 +13,12 @@ export interface S3StorageConfig {
   secret: string;
 }
 
+export interface FtpStorageConfig {
+  uri: string;
+  username: string;
+  password: string;
+}
+
 export enum LocationType {
   Local,
   Queued,
@@ -38,11 +44,23 @@ export interface S3ConnectionOptions {
   options: S3StorageConfig;
 }
 
+export interface FtpConnectionOptions {
+  type: LocationType.FTP;
+  options: FtpStorageConfig;
+}
+
 export type StorageConnectionOptions =
   | DefaultConnectionOptions
-  | S3ConnectionOptions;
+  | S3ConnectionOptions
+  | FtpConnectionOptions;
 
 export interface FileOperationOptions {
   key: string;
   secret: string;
+}
+
+export interface RemoteLocationDriver {
+  type: LocationType;
+  name: string;
+  driver: any; // can't declare the correct interface due to being private within the module
 }
