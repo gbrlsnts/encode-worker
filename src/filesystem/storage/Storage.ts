@@ -4,7 +4,7 @@ export class Storage implements StorageInterface {
   /**
    * The registered drivers per protocol
    */
-  private _drivers: Record<string, StorageInterface>;
+  private _drivers: Record<string, StorageInterface> = {};
 
   /**
    * Get a readable stream for a URI
