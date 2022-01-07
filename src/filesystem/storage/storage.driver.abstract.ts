@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
-import { StorageInterface } from './StorageInterface';
-import { DriverInterface } from './DriverInterface';
+import { StorageInterface } from './storage.interface';
+import { DriverInterface } from './driver.interface';
 
 export abstract class StorageDriver
   implements StorageInterface, DriverInterface {

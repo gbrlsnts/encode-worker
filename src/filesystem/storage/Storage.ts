@@ -1,6 +1,8 @@
-import { StorageInterface } from './StorageInterface';
-import { StorageDriver } from './StorageDriver';
+import { StorageInterface } from './storage.interface';
+import { StorageDriver } from './storage.driver.abstract';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class Storage implements StorageInterface {
   /**
    * The registered drivers
@@ -34,20 +36,39 @@ export class Storage implements StorageInterface {
   /**
    * Get all enabled drivers
    */
-  drivers(): StorageInterface[] {
+  drivers(): StorageDriver[] {
     return this._drivers;
   }
 
   /**
+   * Add one or more drivers
+   * @param drivers
+   */
+  addDrivers(drivers: StorageDriver | StorageDriver[]): this {
+    const driversArray = Array.isArray(drivers) ? drivers : [drivers];
+
+    for (const drv of driversArray) this._addDriver(drv);
+
+    return this;
+  }
+
+  /**
    * Add a driver
-   * @param protocol
    * @param driver
    */
-  addDriver(protocol: string, driver: StorageInterface): void {
-    if (this.getDriver(protocol) !== undefined)
-      throw new Error('Protocol is already being handled by a driver');
+  private _addDriver(driver: StorageDriver): this {
+    const allProtocols = this._drivers.reduce(
+      (prev, drv) => prev.concat(drv.protocols()),
+      [],
+    );
 
-    this._drivers[protocol] = driver;
+    for (const handledProto in allProtocols)
+      if (driver.protocols().includes(handledProto))
+        throw new Error('Protocol is already being handled by a driver');
+
+    this._drivers.push(driver);
+
+    return this;
   }
 
   /**
@@ -55,7 +76,7 @@ export class Storage implements StorageInterface {
    * @param protocol protocol that a driver handles
    * @returns a driver
    */
-  getDriver(protocol: string): StorageInterface | undefined {
+  getDriver(protocol: string): StorageDriver | undefined {
     return this._drivers.find((storage) => storage.handles(protocol));
   }
 
@@ -64,7 +85,7 @@ export class Storage implements StorageInterface {
    * @param protocol protocol that a driver handles
    * @returns a driver or an error
    */
-  getDriverOrFail(protocol: string): StorageInterface | undefined {
+  getDriverOrFail(protocol: string): StorageDriver | undefined {
     const driver = this.getDriver(protocol);
 
     if (!driver) throw new Error('Protocol not supported');

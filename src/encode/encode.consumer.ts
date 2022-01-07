@@ -1,15 +1,14 @@
 import { Job } from 'bull';
+import { lastValueFrom } from 'rxjs';
 import { distinct, tap } from 'rxjs/operators';
 import { Process, Processor } from '@nestjs/bull';
 import { Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { encodeQueueName, outputPathprefixProvider } from '../config/';
 import { FileSystem } from '../filesystem/filesystem.service';
-import { LocationType } from 'src/filesystem/types';
 import {
   EncodeJobQueueItem,
   JobState,
-  rtrimChar,
   EncodeResult,
   WorkerConsumer,
 } from 'src/common';
@@ -25,8 +24,7 @@ export class EncodeConsumer extends WorkerConsumer {
     @Inject(outputPathprefixProvider)
     outputPathPrefix = 'output',
   ) {
-    super(eventEmitter, EncodeConsumer.name);
-    this.outputPathPrefix = rtrimChar(outputPathPrefix, '/');
+    super(eventEmitter, EncodeConsumer.name, outputPathPrefix);
   }
 
   getWorkerState(): JobState {
@@ -35,40 +33,30 @@ export class EncodeConsumer extends WorkerConsumer {
 
   @Process()
   async encode(job: Job<EncodeJobQueueItem>): Promise<EncodeResult> {
-    const source = this.filesystem.getAbsolutePath(
-      job.data.metadata.sourcePath,
-      LocationType.Local,
+    this.initializeStorage();
+
+    const destination = this.makeLocalFilePath(
+      `${job.data.jobId}.${job.data.query.output.format}`,
     );
 
-    const relativeDestination = `${this.outputPathPrefix}/${job.data.jobId}.${job.data.query.output.format}`;
-
-    const destination = this.filesystem.getAbsolutePath(
-      relativeDestination,
-      LocationType.Local,
-    );
-
-    const passLogFile = this.filesystem.getAbsolutePath(
-      `${this.outputPathPrefix}/${job.data.jobId}.logfile`,
-      LocationType.Local,
-    );
+    const passLogFile = this.makeLocalFilePath(`${job.data.jobId}.logfile`);
 
     const encoder = new Encoder(
       job.data.query.output,
-      source,
+      job.data.metadata.sourcePath,
       destination,
       passLogFile,
     );
 
-    await encoder
-      .run()
-      .pipe(
-        distinct(),
-        tap((progress) => job.progress(progress)),
-      )
-      .toPromise();
+    const observable = encoder.run().pipe(
+      distinct(),
+      tap((progress) => job.progress(progress)),
+    );
+
+    await lastValueFrom(observable);
 
     return {
-      path: relativeDestination,
+      path: destination,
     };
   }
 }

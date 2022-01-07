@@ -1,6 +1,6 @@
 import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
-import { StorageDriver } from '../StorageDriver';
+import { StorageDriver } from '../storage.driver.abstract';
 
 /**
  * Local storage driver. All URIs should start with file://

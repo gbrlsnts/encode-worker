@@ -1,8 +1,8 @@
 import { Client, FTPError } from 'basic-ftp';
 import { PassThrough } from 'stream';
 import { Logger } from '@nestjs/common';
-import { FtpStorageConfig } from '../../types';
-import { StorageDriver } from '../StorageDriver';
+import { FtpStorageConfig } from '../../../common';
+import { StorageDriver } from '../storage.driver.abstract';
 
 export class FtpStorage extends StorageDriver {
   protected readonly logger: Logger;

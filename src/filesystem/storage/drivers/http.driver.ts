@@ -2,16 +2,16 @@ import * as FormData from 'form-data';
 import { ReadStream } from 'fs';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PassThrough } from 'stream';
-import { HttpHeader } from '../../../common/';
-import { StorageDriver } from '../StorageDriver';
+import { HttpHeader, HttpConfig } from '../../../common';
+import { StorageDriver } from '../storage.driver.abstract';
 
 export class HttpStorage extends StorageDriver {
   private $driver: AxiosInstance;
 
-  constructor(public rootFolder: string, headers?: HttpHeader[]) {
+  constructor(config?: HttpConfig) {
     super(['http', 'https']);
 
-    const headersConfig = headers?.reduce(
+    const headersConfig = config?.headers?.reduce(
       (obj, header) => ({ ...obj, [header.key]: header.value }),
       {},
     );

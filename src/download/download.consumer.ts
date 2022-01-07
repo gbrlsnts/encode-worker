@@ -1,39 +1,28 @@
-import { join } from 'path';
 import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
 import { Process, Processor } from '@nestjs/bull';
-import { Inject } from '@nestjs/common';
+import { Inject, Scope } from '@nestjs/common';
+import { downloadQueueName, sourcePathprefixProvider } from '../config';
+import { FileSystem } from '../filesystem/';
 import {
   DownloadResult,
   JobQueueItem,
   JobState,
-  rtrimChar,
   WorkerConsumer,
 } from '../common';
-import {
-  downloadQueueName,
-  sourcePathprefixProvider,
-  rootDirectory,
-} from '../config';
-import { FileSystem } from '../filesystem/filesystem.service';
-import { HttpFileDriver } from '../lib/';
 
-@Processor(downloadQueueName)
+@Processor({
+  name: downloadQueueName,
+  scope: Scope.REQUEST,
+})
 export class DownloadConsumer extends WorkerConsumer {
-  private sourcePathPrefix: string;
-  private httpFileDriver: HttpFileDriver;
-
   constructor(
     private filesystem: FileSystem,
     eventEmitter: EventEmitter2,
     @Inject(sourcePathprefixProvider)
-    sourcePathPrefix = 'source',
+    workingDirectory = 'source',
   ) {
-    super(eventEmitter, DownloadConsumer.name);
-    this.sourcePathPrefix = rtrimChar(sourcePathPrefix, '/');
-
-    // should be injected
-    this.httpFileDriver = new HttpFileDriver(rootDirectory);
+    super(eventEmitter, DownloadConsumer.name, workingDirectory);
   }
 
   getWorkerState(): JobState {
@@ -42,14 +31,13 @@ export class DownloadConsumer extends WorkerConsumer {
 
   @Process()
   async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
-    const localPath = join(this.sourcePathPrefix, `${job.data.jobId}.job`);
-    const src = job.data.query.source;
+    this.initializeStorage(job.data.query.source);
 
-    if (src.startsWith('http')) {
-      await this.httpFileDriver.save(src, localPath);
-    } else {
-      await this.filesystem.download(src, localPath);
-    }
+    const localPath = this.makeLocalFilePath(`${job.data.jobId}.job`);
+
+    const src = job.data.query.source.url;
+
+    await this.filesystem.download(src, localPath);
 
     return {
       sourcePath: localPath,

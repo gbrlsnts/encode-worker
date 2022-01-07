@@ -1,10 +1,10 @@
 import { S3 } from 'aws-sdk';
 import { PassThrough } from 'stream';
-import { StorageDriver } from '../StorageDriver';
-import { S3StorageConfig } from '../../types/';
+import { StorageDriver } from '../storage.driver.abstract';
+import { S3StorageConfig } from '../../../common';
 
 /**
- * Local storage driver. All URIs should start with s3://
+ * S3 storage driver. All URIs should start with s3://
  */
 export class S3Storage extends StorageDriver {
   private $driver: S3;

@@ -1,6 +1,7 @@
 import { DownloadResult } from './download.type';
 import { EncodingOptions, EncodeResult } from './encode.type';
 import { JobState } from './job.type';
+import { StorageConfig } from './storage.type';
 
 export interface JobQueueItem {
   jobId: string;
@@ -27,16 +28,16 @@ export type WorkerJob =
   | EncodeJobQueueItem
   | StoreJobQueueItem;
 
+export interface JobUrl {
+  url: string;
+}
+
+export type JobUrlParams = JobUrl & StorageConfig;
+
 export interface JobQuery {
-  source: string;
-  destination: JobDestinationDto;
+  source: JobUrlParams;
+  destination: JobUrlParams;
   output: JobOutput;
 }
 
 export type JobOutput = EncodingOptions;
-
-export interface JobDestinationDto {
-  url: string;
-  key: string;
-  secret: string;
-}

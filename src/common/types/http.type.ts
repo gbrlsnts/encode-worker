@@ -4,7 +4,6 @@ export interface HttpHeader {
 }
 
 export interface HttpConfig {
-  url: string;
   username: string;
   password: string;
   headers: HttpHeader[];
