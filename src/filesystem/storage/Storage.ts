@@ -1,6 +1,7 @@
 import { StorageInterface } from './storage.interface';
 import { StorageDriver } from './storage.driver.abstract';
 import { Injectable } from '@nestjs/common';
+import { getProtocolFromUri } from '../../common';
 
 @Injectable()
 export class Storage implements StorageInterface {
@@ -10,11 +11,19 @@ export class Storage implements StorageInterface {
   private _drivers: StorageDriver[] = [];
 
   /**
+   * Constructor
+   * @param drivers drivers to initialzie this storage with
+   */
+  constructor(drivers?: StorageDriver | StorageDriver[]) {
+    this.addDrivers(drivers);
+  }
+
+  /**
    * Get a readable stream for a URI
    * @param uri uri to get read stream from
    */
   getReadStream(uri: string): Promise<NodeJS.ReadableStream> {
-    return this.getDriverOrFail(this.parseProtocol(uri)).getReadStream(uri);
+    return this.getDriverOrFail(getProtocolFromUri(uri)).getReadStream(uri);
   }
 
   /**
@@ -22,7 +31,7 @@ export class Storage implements StorageInterface {
    * @param uri uri where the stream writes to
    */
   getWriteStream(uri: string): Promise<NodeJS.WritableStream> {
-    return this.getDriverOrFail(this.parseProtocol(uri)).getWriteStream(uri);
+    return this.getDriverOrFail(getProtocolFromUri(uri)).getWriteStream(uri);
   }
 
   /**
@@ -30,7 +39,7 @@ export class Storage implements StorageInterface {
    * @param uri uri to delete
    */
   delete(uri: string): Promise<void> {
-    return this.getDriverOrFail(this.parseProtocol(uri)).delete(uri);
+    return this.getDriverOrFail(getProtocolFromUri(uri)).delete(uri);
   }
 
   /**
@@ -91,18 +100,5 @@ export class Storage implements StorageInterface {
     if (!driver) throw new Error('Protocol not supported');
 
     return driver;
-  }
-
-  /**
-   * Parse a protocol from an uri
-   * @param uri uri to parse
-   * @returns protocol
-   */
-  private parseProtocol(uri: string): string {
-    const delimiter = uri.indexOf(':');
-
-    if (delimiter === -1) throw new Error('Unable to parse protocol');
-
-    return uri.substring(0, delimiter);
   }
 }

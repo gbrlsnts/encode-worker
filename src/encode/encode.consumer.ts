@@ -4,8 +4,7 @@ import { distinct, tap } from 'rxjs/operators';
 import { Process, Processor } from '@nestjs/bull';
 import { Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { encodeQueueName, outputPathprefixProvider } from '../config/';
-import { FileSystem } from '../filesystem/filesystem.service';
+import { encodeQueueName, OUTPUT_PATH } from '../config/';
 import {
   EncodeJobQueueItem,
   JobState,
@@ -16,12 +15,9 @@ import { Encoder } from './encoder';
 
 @Processor(encodeQueueName)
 export class EncodeConsumer extends WorkerConsumer {
-  private outputPathPrefix: string;
-
   constructor(
-    private filesystem: FileSystem,
     eventEmitter: EventEmitter2,
-    @Inject(outputPathprefixProvider)
+    @Inject(OUTPUT_PATH)
     outputPathPrefix = 'output',
   ) {
     super(eventEmitter, EncodeConsumer.name, outputPathPrefix);
@@ -33,8 +29,6 @@ export class EncodeConsumer extends WorkerConsumer {
 
   @Process()
   async encode(job: Job<EncodeJobQueueItem>): Promise<EncodeResult> {
-    this.initializeStorage();
-
     const destination = this.makeLocalFilePath(
       `${job.data.jobId}.${job.data.query.output.format}`,
     );

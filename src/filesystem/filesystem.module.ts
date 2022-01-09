@@ -3,7 +3,13 @@ import { FileSystem } from './filesystem.service';
 import { Storage } from './storage';
 
 @Module({
-  providers: [Storage, FileSystem],
+  providers: [
+    {
+      provide: 'STORAGE',
+      useFactory: () => new Storage(),
+    },
+    FileSystem,
+  ],
   exports: [FileSystem],
 })
 export class FilesystemModule {}

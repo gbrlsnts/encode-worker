@@ -6,7 +6,11 @@ import { mkdir } from 'fs';
 import { sep } from 'path';
 import { Observable, Subject, defer, concat } from 'rxjs';
 import { Logger } from '@nestjs/common';
-import { EncodingOptions, nullDescriptor } from '../common/';
+import {
+  EncodingOptions,
+  nullDescriptor,
+  replaceFileProtocol,
+} from '../common/';
 import { TwoPassOptions } from './encode.type';
 
 export class Encoder {
@@ -23,6 +27,11 @@ export class Encoder {
   ) {
     ffmpeg.setFfmpegPath(pathToFfmpeg);
     ffmpeg.setFfprobePath(pathToFfprobe);
+
+    // paths are fed to ffmpeg which doesn't use the "file:" protocol
+    this.source = replaceFileProtocol(source);
+    this.destination = replaceFileProtocol(destination);
+    this.passLogFile = replaceFileProtocol(passLogFile);
   }
 
   /**

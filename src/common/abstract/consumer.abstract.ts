@@ -10,6 +10,7 @@ import {
   OnQueueProgress,
 } from '@nestjs/bull';
 import {
+  getBaseProtoByUri,
   JobCompletedEvent,
   jobCompletedTopic,
   JobQueueItem,
@@ -19,13 +20,13 @@ import {
   rtrimChar,
   StorageConfig,
 } from '../../common';
-import { LocalStorage, Storage, DriverFactory } from '../../filesystem/';
+import { FileSystem } from '../../filesystem/';
 import { rootDirectory } from '../../config/';
+import { JobUrlParams } from '../types/job-queue.type';
 
 export abstract class WorkerConsumer {
   protected readonly logger: Logger;
 
-  protected storage: Storage;
   protected storageRoot = rootDirectory;
   protected workingDirectory: string;
 
@@ -86,22 +87,30 @@ export abstract class WorkerConsumer {
   }
 
   /**
-   * Initialize the consumer storage from a job query
-   * @param config job storage config
-   */
-  protected initializeStorage(config?: StorageConfig): void {
-    this.storage = new Storage().addDrivers(new LocalStorage());
-
-    if (config)
-      this.storage.addDrivers(DriverFactory.getDriversFromConfig(config));
-  }
-
-  /**
    * Build an absolute URI for a file
    * @param filename file name to build a path for
    * @returns absolute URI for the file (file://)
    */
   protected makeLocalFilePath(filename: string): string {
-    return join('file://', this.storageRoot, this.workingDirectory, filename);
+    return 'file://' + join(this.storageRoot, this.workingDirectory, filename);
   }
+
+  /**
+   * Injects necessary metadata from the job info into the config objects
+   * @param params data to get data to inject
+   */
+  protected injectConfigMetadata(params: JobUrlParams): void {
+    const proto = getBaseProtoByUri(params.url);
+
+    if (params[proto]) {
+      params[proto].enabled = true;
+    } else {
+      params[proto] = { enabled: true };
+    }
+  }
+}
+
+export interface StorageOptions {
+  filesystem: FileSystem;
+  config: StorageConfig;
 }

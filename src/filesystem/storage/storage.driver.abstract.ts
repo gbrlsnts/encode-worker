@@ -17,9 +17,8 @@ export abstract class StorageDriver
   constructor(protocols: string | string[]) {
     this.logger = new Logger(StorageDriver.name);
 
-    this.handledProtocols.concat(
-      typeof protocols === 'string' ? [protocols] : protocols,
-    );
+    this.handledProtocols =
+      typeof protocols === 'string' ? [protocols] : protocols;
   }
 
   /**
@@ -81,7 +80,7 @@ export abstract class StorageDriver
    * @param uri uri to validate
    */
   validateUri(uri: string): void {
-    for (const protocol in this.handledProtocols) {
+    for (const protocol of this.handledProtocols) {
       if (uri.startsWith(`${protocol}`)) return;
     }
 

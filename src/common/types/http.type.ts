@@ -3,8 +3,8 @@ export interface HttpHeader {
   value: string;
 }
 
-export interface HttpConfig {
-  username: string;
-  password: string;
-  headers: HttpHeader[];
-}
+export const protoAliases: Record<string, string[]> = {
+  s3: ['s3'],
+  ftp: ['ftp', 'ftps'],
+  http: ['http', 'https'],
+};

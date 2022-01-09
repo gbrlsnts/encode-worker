@@ -1,5 +1,6 @@
 import { createReadStream, createWriteStream } from 'fs';
 import { unlink } from 'fs/promises';
+import { replaceFileProtocol } from '../../../common/';
 import { StorageDriver } from '../storage.driver.abstract';
 
 /**
@@ -31,7 +32,7 @@ export class LocalStorage extends StorageDriver {
   async getReadStream(uri: string): Promise<NodeJS.ReadableStream> {
     this.validateUri(uri);
 
-    return createReadStream(uri);
+    return createReadStream(replaceFileProtocol(uri));
   }
 
   /**
@@ -41,7 +42,7 @@ export class LocalStorage extends StorageDriver {
   async getWriteStream(uri: string): Promise<NodeJS.WritableStream> {
     this.validateUri(uri);
 
-    return createWriteStream(uri);
+    return createWriteStream(replaceFileProtocol(uri));
   }
 
   /**
@@ -51,6 +52,6 @@ export class LocalStorage extends StorageDriver {
   async delete(uri: string): Promise<void> {
     this.validateUri(uri);
 
-    await unlink(uri);
+    await unlink(replaceFileProtocol(uri));
   }
 }

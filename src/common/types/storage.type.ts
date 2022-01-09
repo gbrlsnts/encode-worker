@@ -1,6 +1,7 @@
-import { HttpConfig } from './http.type';
+import { HttpHeader } from './http.type';
 
 export interface S3StorageConfig {
+  enabled: boolean;
   endpoint: string;
   bucket: string;
   key: string;
@@ -8,19 +9,21 @@ export interface S3StorageConfig {
 }
 
 export interface FtpStorageConfig {
+  enabled: boolean;
   uri: string;
   username: string;
   password: string;
 }
 
 export interface HttpStorageConfig {
-  uri: string;
+  enabled: boolean;
   username: string;
   password: string;
+  headers: HttpHeader[];
 }
 
 export interface StorageConfig {
   ftp?: FtpStorageConfig;
   s3?: S3StorageConfig;
-  http?: HttpConfig;
+  http?: HttpStorageConfig;
 }

@@ -7,7 +7,7 @@ import { JobState, WorkerConsumer, StoreJobQueueItem } from '../common';
 
 @Processor(storeQueueName)
 export class StorageConsumer extends WorkerConsumer {
-  constructor(private filesystem: FileSystem, eventEmitter: EventEmitter2) {
+  constructor(protected filesystem: FileSystem, eventEmitter: EventEmitter2) {
     super(eventEmitter, StorageConsumer.name, 'output');
   }
 
@@ -17,9 +17,10 @@ export class StorageConsumer extends WorkerConsumer {
 
   @Process()
   async store(job: Job<StoreJobQueueItem>) {
-    this.initializeStorage(job.data.query.destination);
+    this.injectConfigMetadata(job.data.query.destination);
+    const storage = this.filesystem.getGateway(job.data.query.destination);
 
-    await this.filesystem.upload(
+    await storage.upload(
       job.data.metadata.path,
       job.data.query.destination.url,
     );

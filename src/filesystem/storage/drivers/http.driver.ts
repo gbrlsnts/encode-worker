@@ -2,13 +2,13 @@ import * as FormData from 'form-data';
 import { ReadStream } from 'fs';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PassThrough } from 'stream';
-import { HttpHeader, HttpConfig } from '../../../common';
+import { HttpHeader, HttpStorageConfig } from '../../../common';
 import { StorageDriver } from '../storage.driver.abstract';
 
 export class HttpStorage extends StorageDriver {
   private $driver: AxiosInstance;
 
-  constructor(config?: HttpConfig) {
+  constructor(config?: HttpStorageConfig) {
     super(['http', 'https']);
 
     const headersConfig = config?.headers?.reduce(
@@ -70,7 +70,6 @@ export class HttpStorage extends StorageDriver {
   ): Promise<NodeJS.WritableStream> {
     const stream = new PassThrough();
 
-    // improve for chunk uploads? or config in query
     const form = new FormData();
     form.append('file', stream);
 

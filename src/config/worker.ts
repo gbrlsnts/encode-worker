@@ -1,17 +1,17 @@
 import { ConfigService } from '@nestjs/config';
 
-export const sourcePathprefixProvider = 'SOURCE_PATH_PREFIX';
-export const outputPathprefixProvider = 'OUTPUT_PATH_PREFIX';
+export const SOURCE_PATH = 'SOURCE_PATH_PREFIX';
+export const OUTPUT_PATH = 'OUTPUT_PATH_PREFIX';
 
 export const sourcePathPrefix = {
-  provide: sourcePathprefixProvider,
+  provide: SOURCE_PATH,
   useFactory: (configService: ConfigService) =>
     configService.get('DOWNLOADED_FOLDER'),
   inject: [ConfigService],
 };
 
 export const outputPathPrefix = {
-  provide: outputPathprefixProvider,
+  provide: OUTPUT_PATH,
   useFactory: (configService: ConfigService) =>
     configService.get('ENCODED_FOLDER'),
   inject: [ConfigService],

@@ -1,8 +1,8 @@
 import { Job } from 'bull';
 import { EventEmitter2 } from 'eventemitter2';
 import { Process, Processor } from '@nestjs/bull';
-import { Inject, Scope } from '@nestjs/common';
-import { downloadQueueName, sourcePathprefixProvider } from '../config';
+import { Inject } from '@nestjs/common';
+import { downloadQueueName, SOURCE_PATH } from '../config';
 import { FileSystem } from '../filesystem/';
 import {
   DownloadResult,
@@ -11,15 +11,12 @@ import {
   WorkerConsumer,
 } from '../common';
 
-@Processor({
-  name: downloadQueueName,
-  scope: Scope.REQUEST,
-})
+@Processor(downloadQueueName)
 export class DownloadConsumer extends WorkerConsumer {
   constructor(
-    private filesystem: FileSystem,
+    protected filesystem: FileSystem,
     eventEmitter: EventEmitter2,
-    @Inject(sourcePathprefixProvider)
+    @Inject(SOURCE_PATH)
     workingDirectory = 'source',
   ) {
     super(eventEmitter, DownloadConsumer.name, workingDirectory);
@@ -31,13 +28,14 @@ export class DownloadConsumer extends WorkerConsumer {
 
   @Process()
   async download(job: Job<JobQueueItem>): Promise<DownloadResult> {
-    this.initializeStorage(job.data.query.source);
+    this.injectConfigMetadata(job.data.query.source);
+    const storage = this.filesystem.getGateway(job.data.query.source);
 
     const localPath = this.makeLocalFilePath(`${job.data.jobId}.job`);
 
     const src = job.data.query.source.url;
 
-    await this.filesystem.download(src, localPath);
+    await storage.download(src, localPath);
 
     return {
       sourcePath: localPath,
