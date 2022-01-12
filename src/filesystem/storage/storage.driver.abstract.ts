@@ -59,6 +59,15 @@ export abstract class StorageDriver
   }
 
   /**
+   * Get the file size
+   * @param uri uri to get the size
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  size(uri: string): Promise<number> {
+    throw new Error('Method not supported');
+  }
+
+  /**
    * Get the supported protocols
    * @returns true if protocol is handled by this storage
    */

@@ -16,4 +16,10 @@ export interface StorageInterface {
    * @param uri uri to delete
    */
   delete(uri: string): Promise<void>;
+
+  /**
+   * Get the file size
+   * @param uri uri to get the size
+   */
+  size(uri: string): Promise<number>;
 }

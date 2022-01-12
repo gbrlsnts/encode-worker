@@ -1,7 +1,5 @@
-import * as FormData from 'form-data';
 import { ReadStream } from 'fs';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { PassThrough } from 'stream';
 import { HttpHeader, HttpStorageConfig } from '../../../common';
 import { StorageDriver } from '../storage.driver.abstract';
 
@@ -57,32 +55,5 @@ export class HttpStorage extends StorageDriver {
     );
 
     return response.data;
-  }
-
-  /**
-   * Get a writable stream for a URI
-   * @param uri uri where the stream writes to
-   * @param headers custom headers to send
-   */
-  async getWriteStream(
-    uri: string,
-    headers?: HttpHeader[],
-  ): Promise<NodeJS.WritableStream> {
-    const stream = new PassThrough();
-
-    const form = new FormData();
-    form.append('file', stream);
-
-    await this.$driver.request({
-      method: 'post',
-      url: uri,
-      headers: {
-        ...form.getHeaders(),
-        ...headers,
-      },
-      data: form,
-    });
-
-    return stream;
   }
 }

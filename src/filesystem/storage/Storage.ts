@@ -43,6 +43,14 @@ export class Storage implements StorageInterface {
   }
 
   /**
+   * Get the file size
+   * @param uri uri to get the size
+   */
+  size(uri: string): Promise<number> {
+    return this.getDriverOrFail(getProtocolFromUri(uri)).size(uri);
+  }
+
+  /**
    * Get all enabled drivers
    */
   drivers(): StorageDriver[] {

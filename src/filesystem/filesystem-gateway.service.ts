@@ -40,7 +40,6 @@ export class FileSystemGateway {
   ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       read.on('error', (e) => reject(e));
-      read.on('close', () => resolve());
 
       write.on('error', (e) => reject(e));
       write.on('close', () => resolve());
